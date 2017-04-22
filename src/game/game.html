@@ -1,0 +1,12 @@
+<template>
+    <require from="./planet/planet.html"></require>
+    <require from="./game.css"></require>
+
+    <div id="space">
+        <div id="pannable" css="transform: translate3d(${-camera.panX}px, ${-camera.panY}px, 0);">
+            <div repeat.for="planet of visiblePlanets">
+                <planet planet.bind="planet"></planet>
+            </div>
+        </div>
+    </div>
+</template>
