@@ -9,5 +9,38 @@ body, html {
     position: fixed;
     top: 0;
     left: 0;
+    z-index: 100;
+}
+
+#context-menu {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    background: #eee;
+    z-index: 200;
+}
+
+#top-bar {
+    position: fixed;
+    top: 0;
+    left:0 ;
+    width: 100%;
+    height: 40px;
+    z-index: 200;
+    background: black;
+    color: white;
+}
+
+.ship-icon {
+    width: 30px;
+    height: 30px;
+    border: 2px solid black;
+    display: inline-block;
+    margin: 5px;
+    &.selected {
+        background: cyan;
+    }
 }
 

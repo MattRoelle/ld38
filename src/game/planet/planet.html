@@ -1,6 +1,20 @@
-<template bindable="planet">
+<template>
     <require from="./planet.css"></require>
 
-    <div class="planet" css="transform: translate3d(${planet.x}px, ${planet.y}px, 0);">
+    <div class="planet" css="transform: translate3d(${planet.x}px, ${planet.y}px, 0);" >
+        <div class="planet-sprite ${planet.selected ? 'selected': ''}"
+             click.delegate="selectPlanet()"
+             css="width: ${planet.radius*2}px; height: ${planet.radius*2}px">
+             <h2>${planet.resources}</h2>
+        </div>
+        <div repeat.for="entity of planet.staticEntities"
+             class="static-entity"
+             click.delegate="selectStaticEntity(entity)"
+             css="left: ${-(entity.distanceFromPlanet + (entity.size/2))}px;
+                  top: ${-(entity.distanceFromPlanet + (entity.size/2))}px;
+                  transform-origin: ${entity.distanceFromPlanet + planet.radius + (entity.size/2)}px ${entity.distanceFromPlanet + planet.radius + (entity.size/2)}px;
+                  transform: rotate(${entity.positionOnOrbit}deg);">
+            <div class="static-entity-sprite ${entity.selected ? 'selected': ''}" ></div>
+        </div>
     </div>
 </template

@@ -1,6 +1,23 @@
 .planet {
+    * {
+        position: absolute;
+    }
+}
+
+.planet-sprite {
     border-radius: 100%;
     background: red;
     width: 80px;
     height: 80px;
+}
+
+.selected {
+    box-shadow: 0px 0px 30px 0px black;
+}
+
+.static-entity-sprite {
+    border-radius: 100%;
+    background: blue;
+    width: 60px;
+    height: 60px
 }

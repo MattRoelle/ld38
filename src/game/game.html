@@ -1,12 +1,41 @@
 <template>
-    <require from="./planet/planet.html"></require>
+    <require from="./planet/planet"></require>
+    <require from="./transient/transient"></require>
     <require from="./game.css"></require>
+
+    <div id="top-bar">
+        <p>Resources: ${gameState.resourceCount} / ${gameState.resourceCap & signal:'constructBuilt'}</p>
+    </div>
 
     <div id="space">
         <div id="pannable" css="transform: translate3d(${-camera.panX}px, ${-camera.panY}px, 0);">
             <div repeat.for="planet of visiblePlanets">
                 <planet planet.bind="planet"></planet>
             </div>
+            <div repeat.for="transient of visibleTransients">
+                <transient entity.bind="transient"></transient>
+            </div>
+        </div>
+    </div>
+
+    <div id="context-menu">
+        <div if.bind="uiService.state == 2">
+            <div>
+                <button click.delegate="buildStaticEntity(1)">Mining Station</button>
+                <button click.delegate="buildStaticEntity(5)">Factory</button>
+                <button click.delegate="buildStaticEntity(6)">Stockpile</button>
+            </div>
+            <div>
+                <div repeat.for="e of entitiesOrbitingPlanet"
+                     class="ship-icon ${e.markedForMovement ? 'selected' : ''}"
+                     click.delegate="markShipForMovement(e)">${e.positionOnOrbit}</div>
+            </div>
+            <div>
+                <button click.delegate="uiService.moveUnits()">Move</button>
+            </div>
+        </div>
+        <div if.bind="uiService.state == 3 && uiService.selectedStaticEntity.type == 5">
+            <button click.delegate="buildTransientEntity(1)">Build Ship</button>
         </div>
     </div>
 </template>
