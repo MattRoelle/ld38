@@ -3,11 +3,32 @@
 }
 
 .transient-sprite {
-    width: 10px;
-    height: 10px;
-    background: purple;
-    &.enemy {
-        background: yellow;
-        border: 3px solid red;
+    width: 20px;
+    height: 20px;
+    animation: fade-in 1.5s linear;
+    position: relative;
+    img {
+        position: absolute;
     }
+    .health-bar {
+        position: absolute;
+        width: 50px;
+        top: -12px;
+        left: -13px;
+        height: 5px;
+        padding: 1px;
+        background: black;
+        border-radius: 2px;
+        .health-bar-inner {
+            height: 100%;
+            background: white;
+        }
+    }
+}
+
+
+@keyframes fade-in {
+    0% { opacity: 0; }
+    50% { opacity: 0;}
+    100% { opacity: 1; }
 }

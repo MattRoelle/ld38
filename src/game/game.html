@@ -10,6 +10,8 @@
     </div>
 
     <div id="space">
+        <div class="bg" id="background" css="background-position-x: ${(-camera.panX/16)}px;
+                                  background-position-y: ${(-camera.panY/16)}px;"></div>
         <div id="pannable" css="transform: translate3d(${-camera.panX}px, ${-camera.panY}px, 0);">
             <div repeat.for="planet of visiblePlanets">
                 <planet planet.bind="planet"></planet>

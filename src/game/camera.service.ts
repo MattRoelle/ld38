@@ -1,3 +1,7 @@
+import { inject } from "aurelia-framework";
+import { EventService, EventTypes } from "./event.service";
+
+@inject(EventService)
 export class CameraService {
     public panSpeed: number = 15;
 
@@ -8,7 +12,7 @@ export class CameraService {
     public minY: number = 0;
     public maxY: number = 0;
 
-    constructor() {
+    constructor(private _eventService: EventService) {
         this.panX = 0;
         this.panY = 0;
     }
@@ -17,18 +21,21 @@ export class CameraService {
         this.panX += x * this.panSpeed;
         this.panY += y * this.panSpeed;
         this.enforceBounds();
+        this.postUpdateEvent();
     }
 
     public panTo(x: number, y: number) {
         this.panX = x - (window.innerWidth / 2);
         this.panY = y - (window.innerHeight / 2);
         this.enforceBounds();
+        this.postUpdateEvent();
     }
 
     public center() {
         this.panX = ((this.maxX - this.minX) / 2) + this.minX;
         this.panY = ((this.maxY - this.minY) / 2) + this.minY;
         this.enforceBounds();
+        this.postUpdateEvent();
     }
 
     private enforceBounds() {
@@ -36,5 +43,12 @@ export class CameraService {
         this.panX = Math.min(this.maxX - window.innerWidth, this.panX);
         this.panY = Math.max(this.minY, this.panY);
         this.panY = Math.min(this.maxY - window.innerHeight, this.panY);
+    }
+
+    public postUpdateEvent() {
+        this._eventService.postEvent(EventTypes.CameraUpdate, {
+            x: this.panX,
+            y: this.panY
+        });
     }
 }

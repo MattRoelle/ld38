@@ -35,5 +35,10 @@ export class EventService {
 }
 
 export enum EventTypes {
-    EnemyPlanetCreated = 1
+    EnemyPlanetCreated = 1,
+    CameraUpdate = 2,
+    ShotFired = 3,
+    PlanetCreated = 4,
+    CheatSpawnDrone = 5,
+    SpawnEnemyUnit = 6
 }

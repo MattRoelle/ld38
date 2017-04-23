@@ -1,9 +1,11 @@
 import { inject } from "aurelia-framework";
 import { CameraService } from "./camera.service";
+import { EventService, EventTypes } from "./event.service";
+import { UiService } from "./ui.service";
 
-@inject(CameraService)
+@inject(CameraService, EventService, UiService)
 export class InputService {
-    constructor(private _camera: CameraService) {}
+    constructor(private _camera: CameraService, private _eventService: EventService, private _uiService: UiService) {}
 
     private _keystates: any = {};
 
@@ -20,16 +22,22 @@ export class InputService {
         let panX = 0;
         let panY = 0;
 
-        this._keystates[KeyCodes.W] && (panY = 1);
-        this._keystates[KeyCodes.S] && (panY = -1);
-        this._keystates[KeyCodes.A] && (panX = 1);
-        this._keystates[KeyCodes.D] && (panX = -1);
+        this._keystates[KeyCodes.W] && (panY = -1);
+        this._keystates[KeyCodes.S] && (panY = 1);
+        this._keystates[KeyCodes.A] && (panX = -1);
+        this._keystates[KeyCodes.D] && (panX = 1);
 
         (panX != 0 || panY != 0) && this._camera.pan(panX, panY);
     }
 
     private onkeydown(e: KeyboardEvent) {
         this._keystates[e.which] = true;
+
+        if (e.which == KeyCodes.T) {
+            this._eventService.postEvent(EventTypes.CheatSpawnDrone, null);
+        } else if (e.which == KeyCodes.ESC) {
+            this._uiService.resetUiState();
+        }
     }
 
     private onkeyup(e: KeyboardEvent) {
@@ -41,5 +49,7 @@ export enum KeyCodes {
     W = 87,
     A = 65,
     S = 83,
-    D = 68
+    D = 68,
+    T = 84,
+    ESC = 27
 }

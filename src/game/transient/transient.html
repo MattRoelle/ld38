@@ -3,6 +3,11 @@
 
     <div class="transient"
          css="transform: translate3d(${entity.x}px, ${entity.y}px, 0);">
-        <div class="transient-sprite ${entity.faction == 2 ? 'enemy' : ''}"><h1>${entity.health}</h1></div>
+        <div class="transient-sprite">
+            <img src="${entity.definition.sprite}" />
+            <div class="health-bar" if.bind="entity.health < entity.definition.health">
+                <div class="health-bar-inner" css="width: ${100*(entity.health / entity.definition.health)}%;"></div>
+            </div>
+        </div>
     </div>
 </template>

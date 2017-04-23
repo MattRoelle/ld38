@@ -2,9 +2,10 @@ import { inject } from "aurelia-framework";
 import { GameStateService, GameState } from "./game-state.service";
 import { PlanetEntity } from "./planet-entity";
 import { StaticEntity, StaticEntities } from "./static-entity";
+import { EnemyAiService } from "./enemy-ai.service";
 import * as _ from "lodash";
 
-@inject(GameStateService)
+@inject(GameStateService, EnemyAiService)
 export class TickService {
     public static TickInterval: number = 4;
 
@@ -14,7 +15,7 @@ export class TickService {
 
     private _timeAtLastTick: number;
 
-    constructor(private _gameStateService: GameStateService) {
+    constructor(private _gameStateService: GameStateService, private _enemyAiService: EnemyAiService) {
         this.startTime = Date.now();
         this.ticks = 0;
         this._timeAtLastTick = this.startTime;
@@ -43,6 +44,8 @@ export class TickService {
         if (this.ticks % 8 == 0) {
             this.updateMiners();
         }
+
+        this._enemyAiService.update(this.ticks);
 
         for(let ev of this.events) {
             ev.onTick && ev.onTick();

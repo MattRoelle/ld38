@@ -8,20 +8,28 @@ import { TickService } from "./tick.service";
 import { InputService } from "./input.service"; import { LogService } from "./log.service"; import { EntityFactory } from "./entity-factory";
 import { StaticEntities } from "./static-entity";
 import { UiService } from "./ui.service";
+import { GraphicsService } from "./graphics.service";
 import * as _ from "lodash";
 
-@inject(GameStateService, CameraService, InputService, EntityFactory, UiService, TickService, LogService)
+@inject(GameStateService, CameraService, InputService, EntityFactory, UiService, TickService, LogService, GraphicsService)
 export class Game {
     public camera: CameraService;
     public uiService: UiService;
     public logService: LogService;
+    public T: number = Date.now();
+    public startTime: number = Date.now();
+
+    public get timeSinceStart() {
+        return Date.now() - this.startTime;
+    }
 
     private _gameStateService: GameStateService;
     private _inputService: InputService;
     private _entityFactory: EntityFactory;
     private _tickService: TickService;
+    private _graphicsService: GraphicsService;
 
-    constructor(gameStateService: GameStateService, camera: CameraService, inputService: InputService, entityFactory: EntityFactory, uiService: UiService, tickService: TickService, logService: LogService) {
+    constructor(gameStateService: GameStateService, camera: CameraService, inputService: InputService, entityFactory: EntityFactory, uiService: UiService, tickService: TickService, logService: LogService, graphicsService: GraphicsService) {
         this.camera = camera;
         this._gameStateService = gameStateService;
         this._inputService = inputService;
@@ -29,17 +37,20 @@ export class Game {
         this.uiService = uiService;
         this._tickService = tickService;
         this.logService = logService;
+        this._graphicsService = graphicsService;
 
-        this._entityFactory.spawnTransientEntity(this._gameStateService.state.planets[0], TransientEntities.SettlementShip, true);
+        const settledP = this._gameStateService.state.planets[0];
+        settledP.settled = true;
+        this.camera.panTo(settledP.x, settledP.y);
     }
 
     attached() {
+        this._graphicsService.initialize();
         this._inputService.initKeyBindings();
 
-        let t2 = Date.now();
-        let animFn = () => {
+        const animFn = () => {
             const t = Date.now();
-            const deltaTime = (t - t2)/1000;
+            const deltaTime = (t - this.T)/1000;
             this._inputService.checkForInput();
             this._tickService.update();
 
@@ -48,7 +59,13 @@ export class Game {
             }
             this._gameStateService.state.transientEntities = _.filter(this._gameStateService.state.transientEntities, e => !e.dead);
 
-            t2 = t;
+            for(let p of this._gameStateService.state.planets) {
+                p.staticEntities = _.filter(p.staticEntities, e => e.health > 0);
+            }
+
+            this.T = t;
+
+            this._graphicsService.update();
             requestAnimationFrame(animFn);
         };
 

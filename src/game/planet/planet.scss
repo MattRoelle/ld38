@@ -1,21 +1,28 @@
 .planet {
-    * {
+    > * {
         position: absolute;
     }
+
+    animation: fade-in 1s linear;
 }
 
 .planet-sprite {
     border-radius: 100%;
-    background: red;
-    width: 80px;
-    height: 80px;
+    background-image: url("src/assets/planet.png");
+    background-size: 100% 100%;
     &.settled {
         border: 5px solid yellow;
+    }
+    p {
+        text-align: center;
+        font-size: 12px;
+        margin: 0;
+        opacity: 0.7;
     }
 }
 
 .selected {
-    box-shadow: 0px 0px 30px 0px black;
+    box-shadow: 0px 0px 30px 0px white;
 }
 
 .static-entity-sprite {
@@ -23,4 +30,10 @@
     background: blue;
     width: 60px;
     height: 60px
+}
+
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }

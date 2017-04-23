@@ -5,8 +5,16 @@
         <div class="planet-sprite ${planet.selected ? 'selected': ''} ${planet.settled ? 'settled': ''}"
              click.delegate="selectPlanet()"
              css="width: ${planet.radius*2}px; height: ${planet.radius*2}px">
-             <h2>${planet.resources}</h2>
+             <p css="line-height: ${planet.radius*2}px;">${planet.resources}</p>
         </div>
+        <div repeat.for="entity of planet.staticEntities"
+             class="static-entity"
+             click.delegate="selectStaticEntity(entity)"
+             css="left: ${planet.radius/2 + entity.x}px;
+                  top: ${planet.radius/2 + entity.y}px;">
+            <div class="static-entity-sprite ${entity.selected ? 'selected': ''}" ></div>
+        </div>
+        <!--
         <div repeat.for="entity of planet.staticEntities"
              class="static-entity"
              click.delegate="selectStaticEntity(entity)"
@@ -16,5 +24,6 @@
                   transform: rotate(${entity.positionOnOrbit}deg);">
             <div class="static-entity-sprite ${entity.selected ? 'selected': ''}" ></div>
         </div>
+        -->
     </div>
 </template

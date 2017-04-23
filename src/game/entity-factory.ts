@@ -2,20 +2,58 @@ import { inject } from "aurelia-framework";
 import { GameStateService } from "./game-state.service";
 import { PlanetEntity } from "./planet-entity";
 import { TickService, ScheduledEvent } from "./tick.service";
-import { TransientEntity, TransientEntities, TransientEntityDefinition, TransientEntityMetadata, TransientEntityState, TransientEntityFaction } from "./transient-entity";
+import { TransientEntity, TransientEntities, TransientEntityDefinition, TransientEntityMetadata, TransientEntityState } from "./transient-entity";
+import { Factions } from "./factions";
 import { StaticEntities, StaticEntity, StaticEntityMetadata, StaticEntityDefinition } from "./static-entity";
 import { BindingSignaler } from "aurelia-templating-resources";
 import { LogService, Log } from "./log.service";
 import { Rng } from "./rng";
 import { EventService, EventTypes } from "./event.service";
+import * as _ from "lodash";
 
 @inject(GameStateService, BindingSignaler, TickService, LogService, EventService)
 export class EntityFactory {
     constructor(private _gameStateService: GameStateService, private _signaler: BindingSignaler, private _tickService: TickService, private _logService: LogService, private _eventService: EventService) {
         this._eventService.registerHandler(EventTypes.EnemyPlanetCreated, ev => {
-            for(let i = 0; i < 3; i++) {
+            let nEnemiesToSpawn = 3;
+
+            if (this._gameStateService.state.planets.length > 5) {
+                ++nEnemiesToSpawn;
+            }
+
+            if (this._gameStateService.state.planets.length > 7) {
+                nEnemiesToSpawn += 2;
+            }
+
+            if (this._gameStateService.state.planets.length > 10) {
+                nEnemiesToSpawn += 3;
+            }
+
+            if (this._gameStateService.state.planets.length > 14) {
+                nEnemiesToSpawn += 4;
+            }
+
+            if (this._gameStateService.state.planets.length > 19) {
+                nEnemiesToSpawn += 9;
+                nEnemiesToSpawn += Math.floor(Rng.rnd(-4, 4));
+            }
+
+            nEnemiesToSpawn += Math.floor(Rng.rnd(-2, 2));
+
+            for(let i = 0; i < nEnemiesToSpawn; i++) {
                 this.spawnTransientEntity(ev.planet, TransientEntities.EnemyDrone, true);
             }
+        });
+
+        this._eventService.registerHandler(EventTypes.SpawnEnemyUnit, d => {
+            for(let i = 0; i < d.unitsToAdd; i++) {
+                this.spawnTransientEntity(d.planet, TransientEntities.EnemyDrone, true);
+            }
+        });
+
+        this._eventService.registerHandler(EventTypes.CheatSpawnDrone, () => {
+            const p = _.find(this._gameStateService.state.planets, p => p.settled);
+            this.spawnTransientEntity(p, TransientEntities.Drone, true);
         });
     }
 
@@ -51,11 +89,13 @@ export class EntityFactory {
                 this._logService.addTempLog(<Log>{
                     text: `Fins`
                 });
-                const posStep = 360 / (p.staticEntities.length);
+                const posStep = (2 * Math.PI) / (p.staticEntities.length);
 
                 for (let i = 0; i < p.staticEntities.length; i++) {
                     const e = p.staticEntities[i];
                     e.positionOnOrbit = posStep * (i + 1);
+                    e.x = Math.cos(e.positionOnOrbit) * 200;
+                    e.y = Math.sin(e.positionOnOrbit) * 200;
                 }
             }
         };
@@ -67,25 +107,25 @@ export class EntityFactory {
         if (e.upgrading)
             return;
 
-        if (e.level < e.metadata.maxUpgradeLevel) {
+        if (e.level < e.definition.maxUpgradeLevel) {
             const staticLog = <Log>{
-                text: `Upgrading ${e.metadata.name} to ${e.level + 1}: 0%`
+                text: `Upgrading ${e.definition.name} to ${e.level + 1}: 0%`
             };
             this._logService.addStaticLog(staticLog);
 
             e.upgrading = true;
 
             const ev: ScheduledEvent = <ScheduledEvent>{
-                n: e.metadata.upgradeTime,
+                n: e.definition.upgradeTime,
                 onTick: () => {
                     const percentage = (this._tickService.ticks - ev.tickScheduledAt) / ev.n;
-                    staticLog.text = `Upgrading ${e.metadata.name} to ${e.level + 1}: ${Math.floor(percentage * 100)}%`
+                    staticLog.text = `Upgrading ${e.definition.name} to ${e.level + 1}: ${Math.floor(percentage * 100)}%`
                 },
                 onCompletion: () => {
                     ++e.level;
                     e.upgrading = false;
                     this._logService.addTempLog(<Log>{
-                        text: `Finshed upgrading ${e.metadata.name} to level ${e.level}`
+                        text: `Finshed upgrading ${e.definition.name} to level ${e.level}`
                     });
                     this._logService.deleteStaticLog(staticLog.id);
                 }
@@ -98,13 +138,15 @@ export class EntityFactory {
     public spawnTransientEntity(p: PlanetEntity, type: TransientEntities, instant: boolean) {
         const metadata = <TransientEntityDefinition>TransientEntityMetadata[type];
         if (instant) {
-            const entity = new TransientEntity(type, metadata);
-            if (type == TransientEntities.EnemyDrone) {
-                entity.faction = TransientEntityFaction.Enemy;
+            const entity = new TransientEntity(type, this._eventService);
+            entity.faction = metadata.faction; 
+            if (entity.faction == Factions.Player) {
+                entity.onEnterPlanet = (p: PlanetEntity) => this._gameStateService.checkIfNeedToGeneratePlanet(p);
             }
-            entity.onEnterPlanet = (p: PlanetEntity) => this._gameStateService.checkIfNeedToGeneratePlanet(p);
             entity.state = TransientEntityState.Orbiting;
             entity.orbitingPlanet = p;
+            entity.x = p.x;
+            entity.y = p.y;
             this._gameStateService.state.transientEntities.push(entity);
 
         } else {
@@ -126,10 +168,15 @@ export class EntityFactory {
                 },
                 onCompletion: () => {
                     this._logService.deleteStaticLog(staticLog.id);
-                    const entity = new TransientEntity(type, metadata);
-                    entity.onEnterPlanet = (p: PlanetEntity) => this._gameStateService.checkIfNeedToGeneratePlanet(p);
+                    const entity = new TransientEntity(type, this._eventService);
+                    entity.faction = metadata.faction; 
+                    if (entity.faction == Factions.Player) {
+                        entity.onEnterPlanet = (p: PlanetEntity) => this._gameStateService.checkIfNeedToGeneratePlanet(p);
+                    }
                     entity.state = TransientEntityState.Orbiting;
                     entity.orbitingPlanet = p;
+                    entity.x = p.x;
+                    entity.y = p.y;
                     this._gameStateService.state.transientEntities.push(entity);
                 }
             };

@@ -29,45 +29,89 @@ export class GameStateService {
     }
 
     public checkIfNeedToGeneratePlanet(p: PlanetEntity) {
-        if (Math.abs(p.x - this._camera.minX) < 600 ||
-            Math.abs(p.x - this._camera.maxX) < 600 ||
-            Math.abs(p.y - this._camera.minY) < 600 ||
-            Math.abs(p.y - this._camera.maxY) < 600) {
-            this.generateNewPlanet(<PlanetGenOpts>({
-                x: p.x,
-                y: p.y,
-                rngRange: 1500
-            }), true);
+        if (p.hasBeenVisitied)
+            return;
+        
+        p.hasBeenVisitied = true;
+
+        const distFromLeft = Math.abs(p.x - this._camera.minX);
+        const distFromRight = Math.abs(p.x - this._camera.maxX);
+        const distFromTop = Math.abs(p.y - this._camera.minY);
+        const distFromBottom = Math.abs(p.y - this._camera.maxY);
+        if (distFromLeft < 600 ||
+            distFromRight < 600 ||
+            distFromTop < 600 ||
+            distFromBottom < 600) {
+
+            const xBias = Math.min(distFromLeft, distFromRight) < Math.min(distFromTop, distFromBottom);
+            const yBias = !xBias;
+
+            const xDir = distFromLeft < distFromRight ? -1 : 1;
+            const yDir = distFromTop < distFromBottom ? -1 : 1;
+
+            let planetsToGenerate = 1
+            if (Rng.rnd(0, 100) < 30) planetsToGenerate++;
+            if (Rng.rnd(0, 100) < 10) planetsToGenerate++;
+
+            setTimeout(() => {
+                for(let i = 0; i < planetsToGenerate; i++) {
+                    let xrng = (xBias ? 1100 : 500);
+                    let yrng = (yBias ? 1100 : 500);
+
+                    if (xBias) yrng += i * 600;
+                    if (yBias) yrng += i * 600;
+
+                    let tryCount = 0;
+                    let finished = false;
+                    while(tryCount < 3 && !finished) {
+                        try {
+                            this.generateNewPlanet(<PlanetGenOpts>({
+                                x: p.x,
+                                y: p.y,
+                                xRange: xrng * xDir,
+                                yRange: yrng * yDir
+                            }), true);
+                            finished = true;
+                        } catch(e) {
+                            tryCount++;
+                        }
+                    }
+                }
+            }, 10);
         }
     }
 
     public generateNewPlanet(opts: PlanetGenOpts, generateOutsideBounds: boolean) {
         const p = new PlanetEntity();
 
-        const rng = opts.rngRange || 1000;
+        const xRng = opts.xRange || 1000;
+        const yRng = opts.yRange || 1000;
 
-        p.x = opts.x + Rng.rnd(-rng, rng);
-        p.y = opts.y + Rng.rnd(-rng, rng);
-        p.radius = Rng.rnd(20, 60);
-        p.resources = 500;
+        p.x = opts.x + Rng.rnd(-xRng, xRng);
+        p.y = opts.y + Rng.rnd(-yRng, yRng);
+        p.radius = Rng.rnd(50, 90);
+        p.resources = 2500 + Math.floor(Rng.rnd(-1000, 3000));
 
         if (_.some(this.state.planets, p2 => {
             if (generateOutsideBounds) {
-                return !(p.x < this._camera.minX || p.x > this._camera.maxX || p.y < this._camera.minY || p.y > this._camera.maxY);
+                const outOfBounds = !(p.x < this._camera.minX || p.x > this._camera.maxX || p.y < this._camera.minY || p.y > this._camera.maxY);
+                return outOfBounds || p.distanceTo(p2) < 650;
             } else {
-                return p.distanceTo(p2) < 700 || p.distanceTo(p2) > 1400
+                return p.distanceTo(p2) < 600 || p.distanceTo(p2) > 3000
             }
         })) {
             this.generateNewPlanet(opts, generateOutsideBounds);
             return;
         }
 
-        this._camera.maxX = Math.max(this._camera.maxX, p.x + 300);
-        this._camera.minX = Math.min(this._camera.minX, p.x - 300);
-        this._camera.maxY = Math.max(this._camera.maxY, p.y + 300);
-        this._camera.minY = Math.min(this._camera.minY, p.y - 300);
+        this._camera.maxX = Math.max(this._camera.maxX, p.x + 500);
+        this._camera.minX = Math.min(this._camera.minX, p.x - 500);
+        this._camera.maxY = Math.max(this._camera.maxY, p.y + 500);
+        this._camera.minY = Math.min(this._camera.minY, p.y - 500);
 
         this.state.planets.push(p);
+
+        this._eventService.postEvent(EventTypes.PlanetCreated, p);
 
         if (generateOutsideBounds) {
             if (Rng.rnd(0, 100) < 90) {
@@ -83,7 +127,8 @@ export class GameStateService {
 interface PlanetGenOpts {
     x: number;
     y: number;
-    rngRange: number
+    xRange: number;
+    yRange: number;
 }
 
 export class GameState {
