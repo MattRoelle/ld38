@@ -3,6 +3,6 @@
 
     <div class="transient"
          css="transform: translate3d(${entity.x}px, ${entity.y}px, 0);">
-        <div class="transient-sprite"></div>
+        <div class="transient-sprite ${entity.faction == 2 ? 'enemy' : ''}"><h1>${entity.health}</h1></div>
     </div>
 </template>

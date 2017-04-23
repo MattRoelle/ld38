@@ -1,31 +1,36 @@
-import { inject } from "aurelia-framework";
+import { inject, computedFrom } from "aurelia-framework";
 import { GameStateService, GameState } from "./game-state.service";
 import { PlanetEntity } from "./planet-entity";
+import { StaticEntity } from "./static-entity";
 import { TransientEntity, TransientEntities } from "./transient-entity";
 import { CameraService } from "./camera.service";
 import { TickService } from "./tick.service";
-import { InputService } from "./input.service";
-import { EntityFactory } from "./entity-factory";
+import { InputService } from "./input.service"; import { LogService } from "./log.service"; import { EntityFactory } from "./entity-factory";
 import { StaticEntities } from "./static-entity";
 import { UiService } from "./ui.service";
+import * as _ from "lodash";
 
-@inject(GameStateService, CameraService, InputService, EntityFactory, UiService, TickService)
+@inject(GameStateService, CameraService, InputService, EntityFactory, UiService, TickService, LogService)
 export class Game {
     public camera: CameraService;
+    public uiService: UiService;
+    public logService: LogService;
 
     private _gameStateService: GameStateService;
     private _inputService: InputService;
     private _entityFactory: EntityFactory;
-    public uiService: UiService;
     private _tickService: TickService;
 
-    constructor(gameStateService: GameStateService, camera: CameraService, inputService: InputService, entityFactory: EntityFactory, uiService: UiService, tickService: TickService) {
+    constructor(gameStateService: GameStateService, camera: CameraService, inputService: InputService, entityFactory: EntityFactory, uiService: UiService, tickService: TickService, logService: LogService) {
         this.camera = camera;
         this._gameStateService = gameStateService;
         this._inputService = inputService;
         this._entityFactory = entityFactory;
         this.uiService = uiService;
         this._tickService = tickService;
+        this.logService = logService;
+
+        this._entityFactory.spawnTransientEntity(this._gameStateService.state.planets[0], TransientEntities.SettlementShip, true);
     }
 
     attached() {
@@ -39,8 +44,9 @@ export class Game {
             this._tickService.update();
 
             for(let e of this._gameStateService.state.transientEntities) {
-                e.update(deltaTime);
+                e.update(deltaTime, this._gameStateService.state.transientEntities);
             }
+            this._gameStateService.state.transientEntities = _.filter(this._gameStateService.state.transientEntities, e => !e.dead);
 
             t2 = t;
             requestAnimationFrame(animFn);
@@ -65,8 +71,12 @@ export class Game {
         this._entityFactory.spawnStaticEntity(this.selectedPlanet, type);
     }
 
+    public upgrade(e: StaticEntity) {
+        this._entityFactory.upgradeStaticEntity(e);
+    }
+
     public buildTransientEntity(type: TransientEntities) {
-        this._entityFactory.spawnTransientEntity(this.selectedPlanet, type);
+        this._entityFactory.spawnTransientEntity(this.selectedPlanet, type, false);
     }
 
     public get visiblePlanets(): PlanetEntity[] {
@@ -79,5 +89,16 @@ export class Game {
 
     public get selectedPlanet(): PlanetEntity {
         return this.uiService.selectedPlanet;
+    }
+
+    public get orbitingCommandCenter() {
+        return _.find(this.entitiesOrbitingPlanet, e => e.type == TransientEntities.SettlementShip && e.orbitingPlanet.id == this.selectedPlanet.id);
+    }
+
+    public settlePlanet() {
+        if (!this.selectedPlanet.settled && !!this.orbitingCommandCenter) {
+            this.selectedPlanet.settled = true;
+            this.orbitingCommandCenter.dead = true;
+        }
     }
 }

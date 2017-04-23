@@ -9,6 +9,9 @@
     background: red;
     width: 80px;
     height: 80px;
+    &.settled {
+        border: 5px solid yellow;
+    }
 }
 
 .selected {

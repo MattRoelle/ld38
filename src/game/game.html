@@ -3,6 +3,8 @@
     <require from="./transient/transient"></require>
     <require from="./game.css"></require>
 
+    <canvas id="foreground-canvas"></canvas>
+
     <div id="top-bar">
         <p>Resources: ${gameState.resourceCount} / ${gameState.resourceCap & signal:'constructBuilt'}</p>
     </div>
@@ -20,7 +22,7 @@
 
     <div id="context-menu">
         <div if.bind="uiService.state == 2">
-            <div>
+            <div if.bind="selectedPlanet.settled">
                 <button click.delegate="buildStaticEntity(1)">Mining Station</button>
                 <button click.delegate="buildStaticEntity(5)">Factory</button>
                 <button click.delegate="buildStaticEntity(6)">Stockpile</button>
@@ -33,9 +35,25 @@
             <div>
                 <button click.delegate="uiService.moveUnits()">Move</button>
             </div>
+            <div if.bind="!selectedPlanet.settled && !!orbitingCommandCenter">
+                <button click.delegate="settlePlanet()">Settle</button>
+            </div>
         </div>
-        <div if.bind="uiService.state == 3 && uiService.selectedStaticEntity.type == 5">
-            <button click.delegate="buildTransientEntity(1)">Build Ship</button>
+        <div if.bind="uiService.state == 3">
+            <h4>Level: ${uiService.selectedStaticEntity.level}</h4>
+            <div if.bind="uiService.selectedStaticEntity.type == 5">
+                <button click.delegate="buildTransientEntity(2)">Build Drone</button>
+                <div if.bind="uiService.selectedStaticEntity.level >= 2">
+                    <button click.delegate="buildTransientEntity(1)">Build Settlement Ship</button>
+                </div>
+            </div>
+            <div if.bind="uiService.selectedStaticEntity.level < uiService.selectedStaticEntity.metadata.maxUpgradeLevel">
+                <button click.delegate="upgrade(uiService.selectedStaticEntity)">Upgrade</div>
+            </div>
         </div>
+    </div>
+
+    <div id="static-logs">
+        <p repeat.for="log of logService.staticLogs">${log.text}</p>
     </div>
 </template>

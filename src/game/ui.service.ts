@@ -2,6 +2,7 @@ import { TransientEntityState } from './transient-entity';
 import { inject } from "aurelia-framework";
 import { PlanetEntity } from "./planet-entity";
 import { StaticEntity } from "./static-entity";
+import { Utils } from "./utils";
 import { GameStateService } from "./game-state.service";
 import * as _ from "lodash";
 

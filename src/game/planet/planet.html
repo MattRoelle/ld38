@@ -2,7 +2,7 @@
     <require from="./planet.css"></require>
 
     <div class="planet" css="transform: translate3d(${planet.x}px, ${planet.y}px, 0);" >
-        <div class="planet-sprite ${planet.selected ? 'selected': ''}"
+        <div class="planet-sprite ${planet.selected ? 'selected': ''} ${planet.settled ? 'settled': ''}"
              click.delegate="selectPlanet()"
              css="width: ${planet.radius*2}px; height: ${planet.radius*2}px">
              <h2>${planet.resources}</h2>

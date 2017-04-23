@@ -7,12 +7,16 @@ export class PlanetEntity {
 
     public x: number;
     public y: number;
+    public id: string = Utils.guid();
     public radius: number;
     public resources: number;
     public selected: boolean;
     public staticEntities: StaticEntity[] = [];
+    public settled: boolean;
+    public settlementHealth: number = 100;
+    public isHostile: boolean = false;
 
-    public collidesWith(e2: PlanetEntity) {
-        return Utils.dist(e2.x, e2.y, this.x, this.y) <= e2.radius + this.radius;
+    public distanceTo(e2: PlanetEntity) {
+        return Utils.dist(e2.x, e2.y, this.x, this.y);
     }
 }
