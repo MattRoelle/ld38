@@ -40,5 +40,6 @@ export enum EventTypes {
     ShotFired = 3,
     PlanetCreated = 4,
     CheatSpawnDrone = 5,
-    SpawnEnemyUnit = 6
+    SpawnEnemyUnit = 6,
+    CheatSpawnEnemyDrone = 7,
 }

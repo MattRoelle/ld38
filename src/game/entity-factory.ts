@@ -17,25 +17,25 @@ export class EntityFactory {
         this._eventService.registerHandler(EventTypes.EnemyPlanetCreated, ev => {
             let nEnemiesToSpawn = 3;
 
-            if (this._gameStateService.state.planets.length > 5) {
-                ++nEnemiesToSpawn;
-            }
-
-            if (this._gameStateService.state.planets.length > 7) {
+            if (this._gameStateService.state.planets.length > 4) {
                 nEnemiesToSpawn += 2;
             }
 
-            if (this._gameStateService.state.planets.length > 10) {
+            if (this._gameStateService.state.planets.length > 5) {
+                nEnemiesToSpawn += 2;
+            }
+
+            if (this._gameStateService.state.planets.length > 8) {
                 nEnemiesToSpawn += 3;
             }
 
-            if (this._gameStateService.state.planets.length > 14) {
+            if (this._gameStateService.state.planets.length > 10) {
                 nEnemiesToSpawn += 4;
             }
 
-            if (this._gameStateService.state.planets.length > 19) {
+            if (this._gameStateService.state.planets.length > 12) {
                 nEnemiesToSpawn += 9;
-                nEnemiesToSpawn += Math.floor(Rng.rnd(-4, 4));
+                nEnemiesToSpawn += Math.floor(Rng.rnd(-1, 4));
             }
 
             nEnemiesToSpawn += Math.floor(Rng.rnd(-2, 2));
@@ -55,16 +55,30 @@ export class EntityFactory {
             const p = _.find(this._gameStateService.state.planets, p => p.settled);
             this.spawnTransientEntity(p, TransientEntities.Drone, true);
         });
+
+        this._eventService.registerHandler(EventTypes.CheatSpawnEnemyDrone, () => {
+            const p = _.find(this._gameStateService.state.planets, p => p.settled);
+            const e =this.spawnTransientEntity(p, TransientEntities.EnemyDrone, true);
+            e.state = TransientEntityState.Attacking;
+            e.desiredDistanceFromOrbitingPlanet = e.distanceFromOrbitingPlanetWhileAttacking;
+        });
     }
 
     public spawnStaticEntity(p: PlanetEntity, type: StaticEntities) {
         const metadata = <StaticEntityDefinition>StaticEntityMetadata[type];
 
+        if (p.staticEntities.length >= 5)
+            return;
+
         if (this._gameStateService.state.resourceCount < metadata.cost)
             return;
 
-        const entity = new StaticEntity(type);
+        const entity = new StaticEntity(type, this._eventService);
         entity.health = metadata.health;
+        entity.planetId = p.id;
+        entity.planetX = p.x;
+        entity.planetY = p.y;
+        entity.planetRadius = p.radius;
 
         this._gameStateService.state.resourceCount -= metadata.cost;
 
@@ -94,8 +108,8 @@ export class EntityFactory {
                 for (let i = 0; i < p.staticEntities.length; i++) {
                     const e = p.staticEntities[i];
                     e.positionOnOrbit = posStep * (i + 1);
-                    e.x = Math.cos(e.positionOnOrbit) * 200;
-                    e.y = Math.sin(e.positionOnOrbit) * 200;
+                    e.x = Math.round((Math.cos(e.positionOnOrbit) * 155) - (p.radius/2));
+                    e.y = Math.round((Math.sin(e.positionOnOrbit) * 155) - (p.radius/2));
                 }
             }
         };
@@ -148,6 +162,8 @@ export class EntityFactory {
             entity.x = p.x;
             entity.y = p.y;
             this._gameStateService.state.transientEntities.push(entity);
+            this._signaler.signal("UpdateShipsForMovement");
+            return entity;
 
         } else {
             if (this._gameStateService.state.resourceCount - metadata.cost < 0)
@@ -178,6 +194,7 @@ export class EntityFactory {
                     entity.x = p.x;
                     entity.y = p.y;
                     this._gameStateService.state.transientEntities.push(entity);
+                    this._signaler.signal("UpdateShipsForMovement");
                 }
             };
 

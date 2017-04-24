@@ -2,17 +2,24 @@
     <require from="./planet.css"></require>
 
     <div class="planet" css="transform: translate3d(${planet.x}px, ${planet.y}px, 0);" >
+        <img class="planet-rings" src="src/assets/planet_rings.png" />
         <div class="planet-sprite ${planet.selected ? 'selected': ''} ${planet.settled ? 'settled': ''}"
              click.delegate="selectPlanet()"
-             css="width: ${planet.radius*2}px; height: ${planet.radius*2}px">
-             <p css="line-height: ${planet.radius*2}px;">${planet.resources}</p>
+             css="background-image: url(${planet.sprite});">
+             <img src="src/assets/planet_settled.png" if.bind="planet.settled"/>
+             <p>${planet.resources}</p>
         </div>
         <div repeat.for="entity of planet.staticEntities"
-             class="static-entity"
-             click.delegate="selectStaticEntity(entity)"
-             css="left: ${planet.radius/2 + entity.x}px;
-                  top: ${planet.radius/2 + entity.y}px;">
-            <div class="static-entity-sprite ${entity.selected ? 'selected': ''}" ></div>
+            class="static-entity"
+            click.delegate="selectStaticEntity(entity)"
+            css="left: ${planet.radius/2 + entity.x}px;
+                top: ${planet.radius/2 + entity.y}px;">
+            <div class="static-entity-sprite" css="background-image: url(${entity.definition.sprite});">
+                <img if.bind="entity.selected" src="src/assets/base_selected.png" />
+            </div>
+            <div class="health-bar">
+                <div class="health-bar-inner" css="width: ${100*(entity.health / entity.definition.health)}%;"></div>
+            </div>
         </div>
         <!--
         <div repeat.for="entity of planet.staticEntities"
@@ -20,7 +27,7 @@
              click.delegate="selectStaticEntity(entity)"
              css="left: ${-(entity.distanceFromPlanet + (entity.size/2))}px;
                   top: ${-(entity.distanceFromPlanet + (entity.size/2))}px;
-                  transform-origin: ${entity.distanceFromPlanet + planet.radius + (entity.size/2)}px ${entity.distanceFromPlanet + planet.radius + (entity.size/2)}px;
+                  transform-origin: ${entity.distanceFneromPlanet + planet.radius + (entity.size/2)}px ${entity.distanceFromPlanet + planet.radius + (entity.size/2)}px;
                   transform: rotate(${entity.positionOnOrbit}deg);">
             <div class="static-entity-sprite ${entity.selected ? 'selected': ''}" ></div>
         </div>

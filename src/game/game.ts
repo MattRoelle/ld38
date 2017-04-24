@@ -1,8 +1,10 @@
 import { inject, computedFrom } from "aurelia-framework";
 import { GameStateService, GameState } from "./game-state.service";
+import { BindingSignaler } from "aurelia-templating-resources";
 import { PlanetEntity } from "./planet-entity";
+import { Factions } from "./factions";
 import { StaticEntity } from "./static-entity";
-import { TransientEntity, TransientEntities } from "./transient-entity";
+import { TransientEntity, TransientEntities, TransientEntityState } from "./transient-entity";
 import { CameraService } from "./camera.service";
 import { TickService } from "./tick.service";
 import { InputService } from "./input.service"; import { LogService } from "./log.service"; import { EntityFactory } from "./entity-factory";
@@ -11,13 +13,14 @@ import { UiService } from "./ui.service";
 import { GraphicsService } from "./graphics.service";
 import * as _ from "lodash";
 
-@inject(GameStateService, CameraService, InputService, EntityFactory, UiService, TickService, LogService, GraphicsService)
+@inject(GameStateService, CameraService, InputService, EntityFactory, UiService, TickService, LogService, GraphicsService, BindingSignaler)
 export class Game {
     public camera: CameraService;
     public uiService: UiService;
     public logService: LogService;
     public T: number = Date.now();
     public startTime: number = Date.now();
+    public signaler: BindingSignaler;
 
     public get timeSinceStart() {
         return Date.now() - this.startTime;
@@ -29,7 +32,7 @@ export class Game {
     private _tickService: TickService;
     private _graphicsService: GraphicsService;
 
-    constructor(gameStateService: GameStateService, camera: CameraService, inputService: InputService, entityFactory: EntityFactory, uiService: UiService, tickService: TickService, logService: LogService, graphicsService: GraphicsService) {
+    constructor(gameStateService: GameStateService, camera: CameraService, inputService: InputService, entityFactory: EntityFactory, uiService: UiService, tickService: TickService, logService: LogService, graphicsService: GraphicsService, signaler: BindingSignaler) {
         this.camera = camera;
         this._gameStateService = gameStateService;
         this._inputService = inputService;
@@ -38,6 +41,7 @@ export class Game {
         this._tickService = tickService;
         this.logService = logService;
         this._graphicsService = graphicsService;
+        this.signaler = signaler;
 
         const settledP = this._gameStateService.state.planets[0];
         settledP.settled = true;
@@ -60,16 +64,34 @@ export class Game {
             this._gameStateService.state.transientEntities = _.filter(this._gameStateService.state.transientEntities, e => !e.dead);
 
             for(let p of this._gameStateService.state.planets) {
+                for(let e of p.staticEntities) {
+                    if (e.type == StaticEntities.Turret) {
+                        e.update(this._gameStateService.state.transientEntities);
+                    }
+                }
                 p.staticEntities = _.filter(p.staticEntities, e => e.health > 0);
             }
 
             this.T = t;
+
+            if (this._gameStateService.state.resourceCount > this._gameStateService.state.resourceCap) {
+                this._gameStateService.state.resourceCount = this._gameStateService.state.resourceCap;
+            }
 
             this._graphicsService.update();
             requestAnimationFrame(animFn);
         };
 
         requestAnimationFrame(animFn);
+    }
+
+    public getAvailableShips(type: TransientEntities) {
+        const p = this.uiService.selectedPlanet;
+        return _.filter(this._gameStateService.state.transientEntities, (e: TransientEntity) => e.faction == Factions.Player
+            && !e.markedForMovement
+            && e.orbitingPlanet.id == p.id
+            && e.type == type
+            && e.state == TransientEntityState.Orbiting).length;
     }
 
     public get gameState() : GameState {
@@ -80,8 +102,27 @@ export class Game {
         return this._gameStateService.state.getEntitiesOrbitingPlanet(this.selectedPlanet);
     }
 
-    public markShipForMovement(e: TransientEntity) {
-        e.markedForMovement = !e.markedForMovement;
+    public markShipForMovement(type: TransientEntities) {
+        const p = this.uiService.selectedPlanet;
+        const es = _.filter(this._gameStateService.state.transientEntities, (e: TransientEntity) => e.faction == Factions.Player
+            && !e.markedForMovement
+            && e.orbitingPlanet.id == p.id
+            && e.type == type
+            && e.state == TransientEntityState.Orbiting);
+
+        if (es.length > 0) {
+            const e = es[0];
+            e.markedForMovement = true;
+            this.signaler.signal("UpdateShipsForMovement");
+        }
+    }
+
+    public get entitiesMarkedForMovement() {
+        const p = this.uiService.selectedPlanet;
+        return _.filter(this._gameStateService.state.transientEntities, (e: TransientEntity) => e.faction == Factions.Player
+            && e.markedForMovement
+            && e.orbitingPlanet.id == p.id
+            && e.state == TransientEntityState.Orbiting)
     }
 
     public buildStaticEntity(type: StaticEntities) {

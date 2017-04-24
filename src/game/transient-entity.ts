@@ -7,10 +7,10 @@ import { Factions } from "./factions";
 import * as _ from "lodash";
 
 export class TransientEntity extends Entity {
-    private actualDistanceFromOrbitingPlanet: number = 250;
-    private desiredDistanceFromOrbitingPlanet: number = 250;
-    public distanceFromOrbitingPlanet: number = 250 + Rng.rnd(-15, 15);
-    public distanceFromOrbitingPlanetWhileAttacking: number = 290 + Rng.rnd(-5, 5);
+    private actualDistanceFromOrbitingPlanet: number = 275;
+    public desiredDistanceFromOrbitingPlanet: number = 275;
+    public distanceFromOrbitingPlanet: number = 275;
+    public distanceFromOrbitingPlanetWhileAttacking: number = 385;
     public type: TransientEntities;
     public definition: TransientEntityDefinition;
     public x: number = 0;
@@ -53,22 +53,22 @@ export class TransientEntity extends Entity {
 
     private updateMoving(deltaT: number, otherEntities: TransientEntity[]) {
         const angleToPlanet = Math.atan2(this.y - this.orbitingPlanet.y, this.x - this.orbitingPlanet.x);
-        this.x -= Math.cos(angleToPlanet) * this.movementSpeed * deltaT;
-        this.y -= Math.sin(angleToPlanet) * this.movementSpeed * deltaT;
+        this.x -= Math.cos(angleToPlanet) * this.definition.speed * 10 * deltaT;
+        this.y -= Math.sin(angleToPlanet) * this.definition.speed * 10 * deltaT;
 
         const distToPlanet = Utils.dist(this.x, this.y, this.orbitingPlanet.x, this.orbitingPlanet.y);
         if (!this.isHostileTo(this.orbitingPlanet, otherEntities)) {
-            if (distToPlanet <= this.distanceFromOrbitingPlanet + this.orbitingPlanet.radius) {
+            if (distToPlanet <= this.distanceFromOrbitingPlanet) {
                 this.actualDistanceFromOrbitingPlanet = distToPlanet;
-                this.desiredDistanceFromOrbitingPlanet = this.distanceFromOrbitingPlanetWhileAttacking;
+                this.desiredDistanceFromOrbitingPlanet = this.distanceFromOrbitingPlanet;
                 this.positionOnObirt = angleToPlanet;
                 this.onEnterPlanet && this.onEnterPlanet(this.orbitingPlanet);
                 this.state = TransientEntityState.Orbiting;
             }
         } else {
-            if (distToPlanet <= this.distanceFromOrbitingPlanetWhileAttacking + this.orbitingPlanet.radius) {
+            if (distToPlanet <= this.distanceFromOrbitingPlanetWhileAttacking) {
                 this.actualDistanceFromOrbitingPlanet = distToPlanet;
-                this.desiredDistanceFromOrbitingPlanet = this.distanceFromOrbitingPlanet;
+                this.desiredDistanceFromOrbitingPlanet = this.distanceFromOrbitingPlanetWhileAttacking;
                 this.positionOnObirt = angleToPlanet;
                 this.state = TransientEntityState.Attacking;
             }
@@ -95,8 +95,8 @@ export class TransientEntity extends Entity {
 
         const distFromPlanet = this.actualDistanceFromOrbitingPlanet;
 
-        const desiredX = this.orbitingPlanet.x + (Math.cos(this.positionOnObirt) * distFromPlanet) + this.orbitingPlanet.radius;
-        const desiredY = this.orbitingPlanet.y + (Math.sin(this.positionOnObirt) * distFromPlanet) + this.orbitingPlanet.radius;
+        const desiredX = this.orbitingPlanet.x + (Math.cos(this.positionOnObirt) * distFromPlanet) + (this.orbitingPlanet.radius/2);
+        const desiredY = this.orbitingPlanet.y + (Math.sin(this.positionOnObirt) * distFromPlanet) + (this.orbitingPlanet.radius/2);
 
         const dX = this.x - desiredX;
         const dY = this.y - desiredY;
@@ -105,7 +105,7 @@ export class TransientEntity extends Entity {
         this.y -= dY * 2 * deltaT;
 
         const enemies = _.orderBy(_.filter(otherEntities, e => e.orbitingPlanet.id == this.orbitingPlanet.id && e.faction != this.faction && e.state != TransientEntityState.Moving), e => Utils.dist(this.x, this.y, e.x, e.y));
-        const constructs = this.orbitingPlanet.staticEntities;
+        const constructs = _.filter(this.orbitingPlanet.staticEntities, e => e.faction != this.faction);
 
         let planetTarget = null;
         if (this.definition.faction == Factions.Enemy && this.orbitingPlanet.settled) {
@@ -150,7 +150,7 @@ export class TransientEntity extends Entity {
                     });
                 }
 
-                target.health -= 10;
+                target.health -= this.definition.damage;
             }
         }
     }
@@ -165,17 +165,21 @@ export enum TransientEntityState {
 export enum TransientEntities {
     SettlementShip = 1,
     Drone = 2,
-    EnemyDrone = 3
+    Tank = 3,
+    Scout = 4,
+    EnemyDrone = 5
 }
 
 export interface TransientEntityDefinition {
     name: string;
     cost: number;
     health: number;
-    buildTime: number;
-    fireRate: number;
     sprite: string;
     faction: Factions;
+    buildTime: number;
+    fireRate: number;
+    damage: number;
+    speed: number;
 }
 
 const TransientEntityMetadata = {};
@@ -183,30 +187,60 @@ const TransientEntityMetadata = {};
 TransientEntityMetadata[TransientEntities.SettlementShip] = {
     name: "Settlement Ship",
     health: 100,
-    cost: 50,
+    cost: 500,
     buildTime: 40,
     fireRate: 1700,
-    sprite: "src/assets/friendly.png",
+    damage: 5,
+    speed: 3,
+    sprite: "src/assets/ships_settler.png",
     faction: Factions.Player,
 };
 
 TransientEntityMetadata[TransientEntities.Drone] = {
     name: "Drone",
-    health: 100,
+    health: 150,
     cost: 50,
-    buildTime: 12,
+    buildTime: 16,
+    damage: 10,
+    speed: 12,
     fireRate: 2300,
     faction: Factions.Player,
-    sprite: "src/assets/friendly.png",
+    sprite: "src/assets/ships_drone.png",
+};
+
+TransientEntityMetadata[TransientEntities.Tank] = {
+    name: "Tank",
+    health: 500,
+    cost: 250,
+    buildTime: 40,
+    fireRate: 5000,
+    damage: 60,
+    speed: 6,
+    faction: Factions.Player,
+    sprite: "src/assets/ships_tank.png",
+};
+
+TransientEntityMetadata[TransientEntities.Scout] = {
+    name: "Scout",
+    health: 100,
+    cost: 100,
+    buildTime: 8,
+    fireRate: 350,
+    damage: 3,
+    speed: 25,
+    faction: Factions.Player,
+    sprite: "src/assets/ships_frigate.png",
 };
 
 TransientEntityMetadata[TransientEntities.EnemyDrone] = {
     name: "Enemy Drone",
-    health: 100,
+    health: 130,
     cost: 0,
     buildTime: 0,
+    speed: 11,
+    damage: 10,
     fireRate: 2600,
-    sprite: "src/assets/enemy.png",
+    sprite: "src/assets/ships_enemy.png",
     faction: Factions.Enemy,
 };
 

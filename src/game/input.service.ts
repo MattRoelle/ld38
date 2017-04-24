@@ -35,6 +35,8 @@ export class InputService {
 
         if (e.which == KeyCodes.T) {
             this._eventService.postEvent(EventTypes.CheatSpawnDrone, null);
+        } else if (e.which == KeyCodes.Y) {
+            this._eventService.postEvent(EventTypes.CheatSpawnEnemyDrone, null);
         } else if (e.which == KeyCodes.ESC) {
             this._uiService.resetUiState();
         }
@@ -51,5 +53,6 @@ export enum KeyCodes {
     S = 83,
     D = 68,
     T = 84,
+    Y = 89,
     ESC = 27
 }

@@ -81,15 +81,26 @@ export class GameStateService {
         }
     }
 
+    public planetSprites: string[] = [
+        "src/assets/planet_1.png",
+        "src/assets/planet_2.png",
+        "src/assets/planet_3.png",
+        "src/assets/planet_4.png",
+        "src/assets/planet_5.png",
+        "src/assts/planet_6.png",
+        "src/assets/planet_7.png",
+        "src/assets/planet_8.png"
+    ];
+
     public generateNewPlanet(opts: PlanetGenOpts, generateOutsideBounds: boolean) {
         const p = new PlanetEntity();
 
         const xRng = opts.xRange || 1000;
         const yRng = opts.yRange || 1000;
 
-        p.x = opts.x + Rng.rnd(-xRng, xRng);
-        p.y = opts.y + Rng.rnd(-yRng, yRng);
-        p.radius = Rng.rnd(50, 90);
+        p.x = Math.round(opts.x + Rng.rnd(-xRng, xRng));
+        p.y = Math.round(opts.y + Rng.rnd(-yRng, yRng));
+        p.radius = 108/2;
         p.resources = 2500 + Math.floor(Rng.rnd(-1000, 3000));
 
         if (_.some(this.state.planets, p2 => {
@@ -97,7 +108,7 @@ export class GameStateService {
                 const outOfBounds = !(p.x < this._camera.minX || p.x > this._camera.maxX || p.y < this._camera.minY || p.y > this._camera.maxY);
                 return outOfBounds || p.distanceTo(p2) < 650;
             } else {
-                return p.distanceTo(p2) < 600 || p.distanceTo(p2) > 3000
+                return p.distanceTo(p2) < 900 || p.distanceTo(p2) > 3000
             }
         })) {
             this.generateNewPlanet(opts, generateOutsideBounds);
@@ -108,6 +119,8 @@ export class GameStateService {
         this._camera.minX = Math.min(this._camera.minX, p.x - 500);
         this._camera.maxY = Math.max(this._camera.maxY, p.y + 500);
         this._camera.minY = Math.min(this._camera.minY, p.y - 500);
+
+        p.sprite = this.planetSprites[Math.floor(Rng.rnd(0, this.planetSprites.length))];
 
         this.state.planets.push(p);
 

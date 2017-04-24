@@ -11,18 +11,8 @@
         position: absolute;
     }
     .health-bar {
-        position: absolute;
-        width: 50px;
         top: -12px;
         left: -13px;
-        height: 5px;
-        padding: 1px;
-        background: black;
-        border-radius: 2px;
-        .health-bar-inner {
-            height: 100%;
-            background: white;
-        }
     }
 }
 

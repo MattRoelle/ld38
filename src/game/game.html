@@ -5,13 +5,12 @@
 
     <canvas id="foreground-canvas"></canvas>
 
-    <div id="top-bar">
-        <p>Resources: ${gameState.resourceCount} / ${gameState.resourceCap & signal:'constructBuilt'}</p>
-    </div>
+    <p id="resource-count">Resources: <strong>${gameState.resourceCount} / ${gameState.resourceCap & signal:'constructBuilt'}</strong></p>
 
     <div id="space">
         <div class="bg" id="background" css="background-position-x: ${(-camera.panX/16)}px;
                                   background-position-y: ${(-camera.panY/16)}px;"></div>
+        <div class="bg" id="background-2"></div>
         <div id="pannable" css="transform: translate3d(${-camera.panX}px, ${-camera.panY}px, 0);">
             <div repeat.for="planet of visiblePlanets">
                 <planet planet.bind="planet"></planet>
@@ -22,40 +21,67 @@
         </div>
     </div>
 
+    <div id="above-context-menu">
+        <div if.bind="uiService.state == 5" repeat.for="e of entitiesMarkedForMovement">
+            <img src="${e.definition.sprite}" />
+        </div>
+    </div>
+
     <div id="context-menu">
         <div if.bind="uiService.state == 2">
-            <div if.bind="selectedPlanet.settled">
-                <button click.delegate="buildStaticEntity(1)">Mining Station</button>
-                <button click.delegate="buildStaticEntity(5)">Factory</button>
-                <button click.delegate="buildStaticEntity(6)">Stockpile</button>
-            </div>
             <div>
-                <div repeat.for="e of entitiesOrbitingPlanet"
-                     class="ship-icon ${e.markedForMovement ? 'selected' : ''}"
-                     click.delegate="markShipForMovement(e)">${e.positionOnOrbit}</div>
-            </div>
-            <div>
-                <button click.delegate="uiService.moveUnits()">Move</button>
+                <button click.delegate="uiService.gotoState(1)"><i class="fa fa-times"></i></button>
+                <button click.delegate="uiService.gotoState(5)">Deploy</button>
+                <button if.bind="selectedPlanet.settled" click.delegate="uiService.gotoState(6)">Build</button>
             </div>
             <div if.bind="!selectedPlanet.settled && !!orbitingCommandCenter">
                 <button click.delegate="settlePlanet()">Settle</button>
             </div>
         </div>
-        <div if.bind="uiService.state == 3">
-            <h4>Level: ${uiService.selectedStaticEntity.level}</h4>
-            <div if.bind="uiService.selectedStaticEntity.type == 5">
-                <button click.delegate="buildTransientEntity(2)">Build Drone</button>
-                <div if.bind="uiService.selectedStaticEntity.level >= 2">
-                    <button click.delegate="buildTransientEntity(1)">Build Settlement Ship</button>
-                </div>
+        <div if.bind="uiService.state == 6">
+            <button click.delegate="uiService.gotoState(1)"><i class="fa fa-times"></i></button>
+            <button click.delegate="uiService.gotoState(2)"><i class="fa fa-chevron-left"></i></button>
+            <button click.delegate="buildStaticEntity(1)"><span>Cost: 100</span>Mining Station</button>
+            <button click.delegate="buildStaticEntity(3)"><span>Cost: 100</span>Turret</button>
+            <button click.delegate="buildStaticEntity(5)"><span>Cost: 100</span>Ship Yard</button>
+            <button click.delegate="buildStaticEntity(6)"><span>Cost: 100</span>Storage</button>
+        </div>
+        <div if.bind="uiService.state == 5">
+            <button click.delegate="uiService.gotoState(1)"><i class="fa fa-times"></i></button>
+            <button click.delegate="uiService.gotoState(2)"><i class="fa fa-chevron-left"></i></button>
+            <button click.delegate="markShipForMovement(2)">Drone (${getAvailableShips(2) & signal:'UpdateShipsForMovement' })</button>
+            <button click.delegate="markShipForMovement(1)">Settlement (${getAvailableShips(1) & signal:'UpdateShipsForMovement'})</button>
+            <button click.delegate="markShipForMovement(3)">Tank (${getAvailableShips(3) & signal:'UpdateShipsForMovement'})</button>
+            <button click.delegate="markShipForMovement(4)">Scout (${getAvailableShips(4) & signal:'UpdateShipsForMovement'})</button>
+        </div>
+            <!--
+            <div>
+                <div repeat.for="e of entitiesOrbitingPlanet"
+                     class="ship-icon ${e.markedForMovement ? 'selected' : ''}"
+                     click.delegate="markShipForMovement(e)">${e.positionOnOrbit}</div>
             </div>
-            <div if.bind="uiService.selectedStaticEntity.level < uiService.selectedStaticEntity.metadata.maxUpgradeLevel">
-                <button click.delegate="upgrade(uiService.selectedStaticEntity)">Upgrade</div>
+            -->
+        <div if.bind="uiService.state == 3">
+            <div if.bind="uiService.selectedStaticEntity.type == 5">
+                <button click.delegate="uiService.gotoState(1)"><i class="fa fa-times"></i></button>
+                <button click.delegate="buildTransientEntity(2)">Build Drone</button>
+                <button click.delegate="buildTransientEntity(1)" if.bind="uiService.selectedStaticEntity.level >= 2">Build Settlement Ship</button>
+                <button click.delegate="buildTransientEntity(3)" if.bind="uiService.selectedStaticEntity.level >= 3">Build Tank</button>
+                <button click.delegate="buildTransientEntity(4)" if.bind="uiService.selectedStaticEntity.level >= 3">Build Scout</button>
+                <button if.bind="uiService.selectedStaticEntity.level < uiService.selectedStaticEntity.definition.maxUpgradeLevel" click.delegate="upgrade(uiService.selectedStaticEntity)">Upgrade</div>
             </div>
         </div>
     </div>
 
-    <div id="static-logs">
-        <p repeat.for="log of logService.staticLogs">${log.text}</p>
+    <div id="logs">
+        <div id="static-logs">
+            <p repeat.for="log of logService.staticLogs">${log.text}</p>
+        </div>
+        <!--
+        <div class="log-sep"></div>
+        <div class="temp-logs">
+            <p repeat.for="log of logService.tempLogs">${log.text}</p>
+        </div>
+        -->
     </div>
 </template>

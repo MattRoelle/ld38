@@ -43,6 +43,9 @@ export class CameraService {
         this.panX = Math.min(this.maxX - window.innerWidth, this.panX);
         this.panY = Math.max(this.minY, this.panY);
         this.panY = Math.min(this.maxY - window.innerHeight, this.panY);
+
+        this.panX = Math.round(this.panX);
+        this.panY = Math.round(this.panY);
     }
 
     public postUpdateEvent() {

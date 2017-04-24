@@ -21,6 +21,10 @@ export class UiService {
         !!this.selectedStaticEntity && (this.selectedStaticEntity.selected = false);
     }
 
+    public gotoState(s: ContextUiStates) {
+        this.state = s;
+    }
+
     public resetUiState() {
         this.deselectCurrent();
         for(let e of this._gameStateService.state.transientEntities) {
@@ -39,7 +43,7 @@ export class UiService {
     }
 
     public selectPlanet(p: PlanetEntity) {
-        if (this.state == ContextUiStates.SelectingPlanetForMovement) {
+        if (this.state == ContextUiStates.Deploy) {
             if (_.some(this._gameStateService.state.transientEntities, e => e.markedForMovement && e.orbitingPlanet.id == p.id)) {
 
             } else {
@@ -61,9 +65,6 @@ export class UiService {
     }
 
     public selectStaticEntity(e: StaticEntity) {
-        if (this.state == ContextUiStates.SelectingPlanetForMovement)
-            return;
-
         this.deselectCurrent();
         e.selected = true;
         this.selectedStaticEntity = e;
@@ -75,5 +76,7 @@ export enum ContextUiStates {
     None = 1,
     Planet = 2,
     StaticEntity = 3,
-    SelectingPlanetForMovement = 4
+    SelectingPlanetForMovement = 4,
+    Deploy = 5,
+    Build = 6
 }
