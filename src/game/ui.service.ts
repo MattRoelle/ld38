@@ -4,15 +4,16 @@ import { PlanetEntity } from "./planet-entity";
 import { StaticEntity } from "./static-entity";
 import { Utils } from "./utils";
 import { GameStateService } from "./game-state.service";
+import { LogService, Log } from "./log.service";
 import * as _ from "lodash";
 
-@inject(GameStateService)
+@inject(GameStateService, LogService)
 export class UiService {
     public selectedPlanet: PlanetEntity;
     public selectedStaticEntity: StaticEntity;
     public state: ContextUiStates = ContextUiStates.None;
 
-    constructor(private _gameStateService: GameStateService) {
+    constructor(private _gameStateService: GameStateService, private _logService: LogService) {
 
     }
 
@@ -22,6 +23,7 @@ export class UiService {
     }
 
     public gotoState(s: ContextUiStates) {
+        this.deselectCurrent();
         this.state = s;
     }
 
@@ -47,13 +49,18 @@ export class UiService {
             if (_.some(this._gameStateService.state.transientEntities, e => e.markedForMovement && e.orbitingPlanet.id == p.id)) {
 
             } else {
+                let nUnits = 0;
                 for(let e of this._gameStateService.state.transientEntities) {
                     if (e.markedForMovement) {
+                        nUnits++;
                         e.markedForMovement = false;
                         e.orbitingPlanet = p;
                         e.state = TransientEntityState.Moving;
                     }
                 }
+                this._logService.addTempLog(<Log>{
+                    text: `Deploying ${nUnits} units`
+                });
                 this.state = ContextUiStates.None;
             }
         } else {

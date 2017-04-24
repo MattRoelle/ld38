@@ -191,7 +191,7 @@ TransientEntityMetadata[TransientEntities.SettlementShip] = {
     buildTime: 40,
     fireRate: 1700,
     damage: 5,
-    speed: 3,
+    speed: 4,
     sprite: "src/assets/ships_settler.png",
     faction: Factions.Player,
 };
@@ -215,7 +215,7 @@ TransientEntityMetadata[TransientEntities.Tank] = {
     buildTime: 40,
     fireRate: 5000,
     damage: 60,
-    speed: 6,
+    speed: 9,
     faction: Factions.Player,
     sprite: "src/assets/ships_tank.png",
 };
@@ -223,7 +223,7 @@ TransientEntityMetadata[TransientEntities.Tank] = {
 TransientEntityMetadata[TransientEntities.Scout] = {
     name: "Scout",
     health: 100,
-    cost: 100,
+    cost: 200,
     buildTime: 8,
     fireRate: 350,
     damage: 3,

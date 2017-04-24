@@ -101,7 +101,7 @@ export class EntityFactory {
                 p.staticEntities.push(entity);
                 this._logService.deleteStaticLog(staticLog.id);
                 this._logService.addTempLog(<Log>{
-                    text: `Fins`
+                    text: `Finshed building ${metadata.name}`
                 });
                 const posStep = (2 * Math.PI) / (p.staticEntities.length);
 
@@ -123,9 +123,13 @@ export class EntityFactory {
 
         if (e.level < e.definition.maxUpgradeLevel) {
             const staticLog = <Log>{
-                text: `Upgrading ${e.definition.name} to ${e.level + 1}: 0%`
+                text: `Upgrading ${e.definition.name} to level ${e.level + 1}: 0%`
             };
             this._logService.addStaticLog(staticLog);
+
+            this._logService.addTempLog(<Log>{
+                text: `Upgrading ${e.definition.name} to level ${e.level + 1}`
+            });
 
             e.upgrading = true;
 
@@ -142,6 +146,9 @@ export class EntityFactory {
                         text: `Finshed upgrading ${e.definition.name} to level ${e.level}`
                     });
                     this._logService.deleteStaticLog(staticLog.id);
+                    this._logService.addTempLog(<Log>{
+                        text: `Finished ${e.definition.name} to level ${e.level + 1}`
+                    });
                 }
             };
 

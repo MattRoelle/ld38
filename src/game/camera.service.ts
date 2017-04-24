@@ -3,7 +3,15 @@ import { EventService, EventTypes } from "./event.service";
 
 @inject(EventService)
 export class CameraService {
-    public panSpeed: number = 15;
+    public get panSpeed() {
+        if (window.innerWidth > 1900) {
+            return 35;
+        } else if (window.innerWidth > 1500) {
+            return 25;
+        } else {
+            return 15;
+        }
+    }
 
     public panX: number = 0;
     public panY: number = 0;

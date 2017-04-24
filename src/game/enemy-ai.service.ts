@@ -38,14 +38,14 @@ export class EnemyAiService {
                     this.lastAttackAt =  tick;
                     const planetToAttack = _.filter(
                                                 _.orderBy(this._gameStateService.state.planets, p => Utils.dist(planet.x, planet.y, p.x, p.y)),
-                                               p => !_.some(this._gameStateService.state.transientEntities, e =>
+                                                p => !_.some(this._gameStateService.state.transientEntities, e =>
                                                                 e.orbitingPlanet.id == p.id
                                                                 && e.state != TransientEntityState.Moving
                                                                 && e.state != TransientEntityState.Attacking
                                                                 && e.faction == Factions.Enemy))[0];
 
                     const unitsAtPlanet = _.filter(units, u => u.orbitingPlanet.id == planet.id && u.faction == Factions.Enemy);
-                    const unitsToSend = Math.max(1, Math.floor(Rng.rnd(0, unitsAtPlanet.length)));
+                    const unitsToSend = Math.floor(Rng.rnd(0, unitsAtPlanet.length - 1));
 
                     for(let i = 0; i < unitsToSend; i++) {
                         const u = unitsAtPlanet[i];

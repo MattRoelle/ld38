@@ -64,6 +64,7 @@ export class TickService {
                     const dr = Math.min(p.resources, Math.max(this._gameStateService.state.resourceCap - this._gameStateService.state.resourceCount, 0), 50);
                     p.resources -= dr;
                     this._gameStateService.state.resourceCount += dr;
+                    this._gameStateService.state.score += dr;
                 }
             }
         }

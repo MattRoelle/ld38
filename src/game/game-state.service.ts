@@ -87,7 +87,7 @@ export class GameStateService {
         "src/assets/planet_3.png",
         "src/assets/planet_4.png",
         "src/assets/planet_5.png",
-        "src/assts/planet_6.png",
+        "src/assets/planet_6.png",
         "src/assets/planet_7.png",
         "src/assets/planet_8.png"
     ];
@@ -148,6 +148,7 @@ export class GameState {
     public planets: PlanetEntity[];
     public transientEntities: TransientEntity[];
     public resourceCount: number;
+    public score: number;
     public gameState: GameStates;
 
     constructor() {
@@ -155,6 +156,7 @@ export class GameState {
         this.transientEntities = [];
         this.gameState = GameStates.Playing;
         this.resourceCount = 200;
+        this.score = 0;
     }
 
     public getStaticEntitiesOfType(type: StaticEntities): StaticEntity[] {

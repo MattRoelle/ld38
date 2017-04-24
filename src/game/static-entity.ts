@@ -44,6 +44,7 @@ export class StaticEntity extends Entity {
         this.definition = StaticEntityMetadata[type];
         this.health = this.definition.health;
         this._eventService = eventService;
+        this.faction = this.definition.faction;
     }
 
     public update(entities: TransientEntity[]) {
@@ -109,7 +110,7 @@ StaticEntityMetadata[StaticEntities.MiningStation] = {
 
 StaticEntityMetadata[StaticEntities.Turret] = {
     name: "Turret",
-    cost: 50,
+    cost: 250,
     health: 300,
     maxUpgradeLevel: 3,
     buildTime: 4,
@@ -120,7 +121,7 @@ StaticEntityMetadata[StaticEntities.Turret] = {
 
 StaticEntityMetadata[StaticEntities.Stockpile] = {
     name: "Stockpile",
-    cost: 100,
+    cost: 50,
     health: 100,
     maxUpgradeLevel: 3,
     buildTime: 20,
@@ -131,7 +132,7 @@ StaticEntityMetadata[StaticEntities.Stockpile] = {
 
 StaticEntityMetadata[StaticEntities.ShipYard] = {
     name: "Ship Yard",
-    cost: 100,
+    cost: 150,
     health: 100,
     maxUpgradeLevel: 20,
     buildTime: 4,

@@ -102,6 +102,19 @@ export class Game {
         return this._gameStateService.state.getEntitiesOrbitingPlanet(this.selectedPlanet);
     }
 
+    public selectAllShipsForMovement() {
+        const p = this.uiService.selectedPlanet;
+        const es = _.filter(this._gameStateService.state.transientEntities, (e: TransientEntity) => e.faction == Factions.Player
+            && e.orbitingPlanet.id == p.id
+            && e.state == TransientEntityState.Orbiting);
+
+        for(let e of es) {
+            e.markedForMovement = true;
+        }
+
+        this.signaler.signal("UpdateShipsForMovement");
+    }
+
     public markShipForMovement(type: TransientEntities) {
         const p = this.uiService.selectedPlanet;
         const es = _.filter(this._gameStateService.state.transientEntities, (e: TransientEntity) => e.faction == Factions.Player
@@ -126,15 +139,22 @@ export class Game {
     }
 
     public buildStaticEntity(type: StaticEntities) {
-        this._entityFactory.spawnStaticEntity(this.selectedPlanet, type);
+        this._entityFactory.spawnStaticEntity(this.uiService.selectedPlanet, type);
     }
 
     public upgrade(e: StaticEntity) {
         this._entityFactory.upgradeStaticEntity(e);
     }
 
+    public sell(e: StaticEntity) {
+        this._gameStateService.state.resourceCount += e.definition.cost/2;
+        e.health = -100;
+        this.uiService.gotoState(1);
+    }
+
     public buildTransientEntity(type: TransientEntities) {
-        this._entityFactory.spawnTransientEntity(this.selectedPlanet, type, false);
+        const p = _.filter(this._gameStateService.state.planets, p => p.id == this.uiService.selectedStaticEntity.planetId)[0];
+        this._entityFactory.spawnTransientEntity(p, type, false);
     }
 
     public get visiblePlanets(): PlanetEntity[] {
